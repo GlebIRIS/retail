@@ -1,6 +1,12 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+from github import Github  # Install the 'github' library using: pip install PyGithub
+
+# GitHub repository details
+USERNAME = "GlebIRIS"
+REPO_NAME = "retail"
+ACCESS_TOKEN = "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"
 
 def main():
     st.title("Survey App")
@@ -64,6 +70,7 @@ def additional_survey_page():
         # Save survey_responses to CSV file
         save_to_csv(response_id, st.session_state.survey_responses)
         st.success("Survey submitted successfully!")
+        commit_and_push_to_github()
 
 def generate_response_id(question3_answer):
     # Generate unique response ID based on the answer to Question 3 and the date
@@ -89,6 +96,34 @@ def save_to_csv(response_id, data):
     # Save DataFrame to CSV file
     df.to_csv('survey_responses.csv', mode='a', index=False, header=not st.session_state.csv_exists)
     st.session_state.csv_exists = True
+
+
+def commit_and_push_to_github():
+    # Use PyGithub to commit and push changes to GitHub
+    g = Github(ACCESS_TOKEN)
+    user = g.get_user()
+    repo = user.get_repo(REPO_NAME)
+
+    # Read the contents of the local CSV file
+    with open('survey_responses.csv', 'r') as file:
+        content = file.read()
+
+    # Get the existing file on GitHub to obtain its SHA
+    try:
+        existing_file = repo.get_contents('survey_responses.csv', ref='main')
+        sha = existing_file.sha
+    except Exception as e:
+        # Handle the case where the file doesn't exist yet
+        sha = None
+
+    # Update the file on GitHub
+    commit_message = "Update survey responses"
+
+    if sha is not None:
+        repo.update_file('survey_responses.csv', commit_message, content, sha, branch="main")
+    else:
+        repo.create_file('survey_responses.csv', commit_message, content, branch="main")
+
 
 if __name__ == "__main__":
     main()
