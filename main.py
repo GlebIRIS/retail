@@ -97,6 +97,8 @@ def save_to_csv(response_id, data):
     df.to_csv('survey_responses.csv', mode='a', index=False, header=not st.session_state.csv_exists)
     st.session_state.csv_exists = True
 
+    # Print for debugging
+    print("Saved to CSV:", response_id, data)
 
 def commit_and_push_to_github():
     # Use PyGithub to commit and push changes to GitHub
@@ -123,13 +125,9 @@ def commit_and_push_to_github():
         repo.update_file('survey_responses.csv', commit_message, content, sha, branch="main")
     else:
         repo.create_file('survey_responses.csv', commit_message, content, branch="main")
-print("Before GitHub update")
-if sha is not None:
-    repo.update_file('survey_responses.csv', commit_message, content, sha, branch="main")
-else:
-    repo.create_file('survey_responses.csv', commit_message, content, branch="main")
-print("After GitHub update")
 
+    # Print for debugging
+    print("Committed and pushed to GitHub:", commit_message)
 
 if __name__ == "__main__":
     main()
