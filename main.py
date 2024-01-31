@@ -123,6 +123,12 @@ def commit_and_push_to_github():
         repo.update_file('survey_responses.csv', commit_message, content, sha, branch="main")
     else:
         repo.create_file('survey_responses.csv', commit_message, content, branch="main")
+print("Before GitHub update")
+if sha is not None:
+    repo.update_file('survey_responses.csv', commit_message, content, sha, branch="main")
+else:
+    repo.create_file('survey_responses.csv', commit_message, content, branch="main")
+print("After GitHub update")
 
 
 if __name__ == "__main__":
