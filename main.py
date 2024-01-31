@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 from github import Github  # Install the 'github' library using: pip install PyGithub
-
+!pip install PyGithub
+from github import Github
 # GitHub repository details
 USERNAME = "GlebIRIS"
 REPO_NAME = "retail"
