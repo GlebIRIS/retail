@@ -4,7 +4,7 @@ from datetime import datetime
 import requests
 from requests.auth import HTTPBasicAuth
 import subprocess
-
+import base64
 # Install PyGithub
 subprocess.call(["pip", "install", "PyGithub"])
 USERNAME = "GlebIRIS"
@@ -109,13 +109,13 @@ def commit_and_push_to_github():
     commit_url = f"https://api.github.com/repos/{USERNAME}/{REPO_NAME}/git/refs/heads/main"
 
     # Read the contents of the local CSV file
-    with open('survey_responses.csv', 'r') as file:
-        content = file.read()
+    with open('survey_responses.csv', 'rb') as file:
+        content = base64.b64encode(file.read()).decode('utf-8')
 
     # Get the existing file on GitHub to obtain its SHA
     response = requests.get(repo_url, auth=HTTPBasicAuth(USERNAME, ACCESS_TOKEN))
     response_data = response.json()
-    
+
     if response.status_code == 200:
         sha = response_data['sha']
     else:
@@ -145,6 +145,9 @@ def commit_and_push_to_github():
         print("Committed and pushed to GitHub:", commit_message)
     else:
         print("Error committing and pushing to GitHub:", response.text)
+
+    # Print for debugging
+    print("Committed and pushed to GitHub:", commit_message)
 
 if __name__ == "__main__":
     main()
