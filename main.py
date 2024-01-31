@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-from github import Github
-
+import requests
+from requests.auth import HTTPBasicAuth
 import subprocess
 
 # Install PyGithub
@@ -104,33 +104,47 @@ def save_to_csv(response_id, data):
     print("Saved to CSV:", response_id, data)
 
 def commit_and_push_to_github():
-    # Use PyGithub to commit and push changes to GitHub
-    g = Github(ACCESS_TOKEN)
-    user = g.get_user()
-    repo = user.get_repo(REPO_NAME)
+    # GitHub repository details
+    repo_url = f"https://api.github.com/repos/{USERNAME}/{REPO_NAME}/contents/survey_responses.csv"
+    commit_url = f"https://api.github.com/repos/{USERNAME}/{REPO_NAME}/git/refs/heads/main"
 
     # Read the contents of the local CSV file
     with open('survey_responses.csv', 'r') as file:
         content = file.read()
 
     # Get the existing file on GitHub to obtain its SHA
-    try:
-        existing_file = repo.get_contents('survey_responses.csv', ref='main')
-        sha = existing_file.sha
-    except Exception as e:
-        # Handle the case where the file doesn't exist yet
+    response = requests.get(repo_url, auth=HTTPBasicAuth(USERNAME, ACCESS_TOKEN))
+    response_data = response.json()
+    
+    if response.status_code == 200:
+        sha = response_data['sha']
+    else:
         sha = None
 
     # Update the file on GitHub
     commit_message = "Update survey responses"
+    headers = {'Authorization': f'token {ACCESS_TOKEN}'}
 
     if sha is not None:
-        repo.update_file('survey_responses.csv', commit_message, content, sha, branch="main")
+        update_data = {
+            "message": commit_message,
+            "content": content,
+            "sha": sha,
+            "branch": "main"
+        }
+        response = requests.put(repo_url, headers=headers, json=update_data)
     else:
-        repo.create_file('survey_responses.csv', commit_message, content, branch="main")
+        create_data = {
+            "message": commit_message,
+            "content": content,
+            "branch": "main"
+        }
+        response = requests.put(repo_url, headers=headers, json=create_data)
 
-    # Print for debugging
-    print("Committed and pushed to GitHub:", commit_message)
+    if response.status_code == 200 or response.status_code == 201:
+        print("Committed and pushed to GitHub:", commit_message)
+    else:
+        print("Error committing and pushing to GitHub:", response.text)
 
 if __name__ == "__main__":
     main()
